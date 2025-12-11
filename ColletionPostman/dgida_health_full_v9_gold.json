@@ -1,0 +1,154 @@
+{
+	"info": {
+		"_postman_id": "dgida-health-final-v9-2-platinum",
+		"name": "DGIDA Sector SALUD (V9.2 PLATINUM)",
+		"description": "Versión corregida para soportar respuestas en Array y Variables de Colección.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "00. CARGA MASIVA (SEED)",
+      "description": "Ejecuta esta carpeta para poblar la BD en segundos. IMPORTANTE: Ejecuta las peticiones EN ORDEN descendente.",
+			"item": [
+        {
+          "name": "Seed: Instituciones",
+          "event": [{ "listen": "test", "script": { "exec": ["var jsonData = pm.response.json();", "if(Array.isArray(jsonData) && jsonData.length > 0) { jsonData = jsonData[0]; }", "var id = jsonData.id || jsonData._id;", "if(id) { pm.collectionVariables.set(\"seed_inst_id\", id); console.log(\"Inst ID captured: \" + id); } else { console.log(\"Error capturing ID: \" + JSON.stringify(jsonData)); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"name\": \"Hospital Nacional Rosales\", \"description\": \"Tercer Nivel\", \"sector\": \"Salud\", \"code\": \"HNR-SEED-{{$randomInt}}\"}" },
+            "url": { "raw": "{{base_url}}/instituciones", "host": ["{{base_url}}"], "path": ["instituciones"] }
+          }
+        },
+        {
+          "name": "Seed: Programas",
+          "event": [{ "listen": "test", "script": { "exec": ["var jsonData = pm.response.json();", "if(Array.isArray(jsonData) && jsonData.length > 0) { jsonData = jsonData[0]; }", "var id = jsonData.id || jsonData._id;", "if(id) { pm.collectionVariables.set(\"seed_prog_id\", id); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"name\": \"Programa de Vacunación\", \"institutionId\": \"{{seed_inst_id}}\", \"budget\": 5000000, \"startDate\": \"2024-01-01\"}" },
+            "url": { "raw": "{{base_url}}/programas", "host": ["{{base_url}}"], "path": ["programas"] }
+          }
+        }
+			]
+		},
+		{
+			"name": "0. Autenticación & Perfil",
+			"item": [
+				{
+					"name": "Registro Admin",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"name\": \"Admin General\", \"email\": \"admin@dgida.gob.sv\", \"password\": \"123456\"}" },
+						"url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+					}
+				},
+				{
+					"name": "Login (Set Token)",
+					"event": [{ "listen": "test", "script": { "exec": ["var jsonData = pm.response.json();", "if(jsonData.token) { pm.collectionVariables.set(\"token\", jsonData.token); console.log(\"Token actualizado\"); }"], "type": "text/javascript" } }],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"email\": \"admin@dgida.gob.sv\", \"password\": \"123456\"}" },
+						"url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+					}
+				},
+        {
+					"name": "Ver Mi Perfil",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "x-auth-token", "value": "{{token}}" }],
+						"url": { "raw": "{{base_url}}/auth/user", "host": ["{{base_url}}"], "path": ["auth", "user"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "1. Instituciones",
+			"item": [
+				{
+					"name": "Crear Institución",
+					"event": [{ "listen": "test", "script": { "exec": ["var jsonData = pm.response.json();", "if(Array.isArray(jsonData) && jsonData.length > 0) { jsonData = jsonData[0]; }", "var id = jsonData.id || jsonData._id;", "if(id) { pm.collectionVariables.set(\"inst_id\", id); }"], "type": "text/javascript" } }],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"name\": \"Dirección de Medicamentos\", \"description\": \"Regulador\", \"sector\": \"Salud\", \"code\": \"DNM-{{$randomInt}}\"}" },
+						"url": { "raw": "{{base_url}}/instituciones", "host": ["{{base_url}}"], "path": ["instituciones"] }
+					}
+				},
+				{ "name": "Listar Todas", "request": { "method": "GET", "url": { "raw": "{{base_url}}/instituciones", "host": ["{{base_url}}"], "path": ["instituciones"] } } },
+        { "name": "Ver Una (ID)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/instituciones/{{inst_id}}", "host": ["{{base_url}}"], "path": ["instituciones", "{{inst_id}}"] } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"description\": \"Descripción Actualizada\"}" }, "url": { "raw": "{{base_url}}/instituciones/{{inst_id}}", "host": ["{{base_url}}"], "path": ["instituciones", "{{inst_id}}"] } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "header": [{ "key": "x-auth-token", "value": "{{token}}" }], "url": { "raw": "{{base_url}}/instituciones/{{inst_id}}", "host": ["{{base_url}}"], "path": ["instituciones", "{{inst_id}}"] } } }
+			]
+		},
+    {
+      "name": "2. Programas",
+      "item": [
+        {
+          "name": "Crear Programa",
+          "event": [{ "listen": "test", "script": { "exec": ["var jsonData = pm.response.json();", "if(Array.isArray(jsonData) && jsonData.length > 0) { jsonData = jsonData[0]; }", "var id = jsonData.id || jsonData._id;", "if(id) { pm.collectionVariables.set(\"prog_id\", id); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"name\": \"Salud Renal\", \"institutionId\": \"{{seed_inst_id}}\", \"budget\": 100000, \"startDate\": \"2024-03-01\"}" },
+            "url": { "raw": "{{base_url}}/programas", "host": ["{{base_url}}"], "path": ["programas"] }
+          }
+        },
+        { "name": "Listar Todos", "request": { "method": "GET", "url": { "raw": "{{base_url}}/programas", "host": ["{{base_url}}"], "path": ["programas"] } } },
+        { "name": "Ver Uno (ID)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/programas/{{prog_id}}", "host": ["{{base_url}}"], "path": ["programas", "{{prog_id}}"] } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"budget\": 200000}" }, "url": { "raw": "{{base_url}}/programas/{{prog_id}}", "host": ["{{base_url}}"], "path": ["programas", "{{prog_id}}"] } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "header": [{ "key": "x-auth-token", "value": "{{token}}" }], "url": { "raw": "{{base_url}}/programas/{{prog_id}}", "host": ["{{base_url}}"], "path": ["programas", "{{prog_id}}"] } } }
+      ]
+    },
+    {
+      "name": "3. Proyectos",
+      "item": [
+        {
+          "name": "Crear Proyecto",
+          "event": [{ "listen": "test", "script": { "exec": ["var jsonData = pm.response.json();", "if(Array.isArray(jsonData) && jsonData.length > 0) { jsonData = jsonData[0]; }", "var id = jsonData.id || jsonData._id;", "if(id) { pm.collectionVariables.set(\"proj_id\", id); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"name\": \"Remodelación Farmacia\", \"programId\": \"{{seed_prog_id}}\", \"manager\": \"Ing. López\", \"progress\": 10, \"startDate\": \"2024-04-01\", \"endDate\": \"2024-12-01\"}" },
+            "url": { "raw": "{{base_url}}/proyectos", "host": ["{{base_url}}"], "path": ["proyectos"] }
+          }
+        },
+        { "name": "Listar Todos", "request": { "method": "GET", "url": { "raw": "{{base_url}}/proyectos", "host": ["{{base_url}}"], "path": ["proyectos"] } } },
+        { "name": "Ver Uno (ID)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/proyectos/{{proj_id}}", "host": ["{{base_url}}"], "path": ["proyectos", "{{proj_id}}"] } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"progress\": 50}" }, "url": { "raw": "{{base_url}}/proyectos/{{proj_id}}", "host": ["{{base_url}}"], "path": ["proyectos", "{{proj_id}}"] } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "header": [{ "key": "x-auth-token", "value": "{{token}}" }], "url": { "raw": "{{base_url}}/proyectos/{{proj_id}}", "host": ["{{base_url}}"], "path": ["proyectos", "{{proj_id}}"] } } }
+      ]
+    },
+    {
+      "name": "4. Trámites",
+      "item": [
+        {
+          "name": "Crear Trámite",
+          "event": [{ "listen": "test", "script": { "exec": ["var jsonData = pm.response.json();", "if(Array.isArray(jsonData) && jsonData.length > 0) { jsonData = jsonData[0]; }", "var id = jsonData.id || jsonData._id;", "if(id) { pm.collectionVariables.set(\"proc_id\", id); }"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"name\": \"Registro de Marca\", \"institutionId\": \"{{seed_inst_id}}\", \"isDigital\": true, \"cost\": 100, \"requirements\": \"DUI, NIT, Solvencia\", \"durationDays\": 15}" },
+            "url": { "raw": "{{base_url}}/tramites", "host": ["{{base_url}}"], "path": ["tramites"] }
+          }
+        },
+        { "name": "Listar Todos", "request": { "method": "GET", "url": { "raw": "{{base_url}}/tramites", "host": ["{{base_url}}"], "path": ["tramites"] } } },
+        { "name": "Ver Uno (ID)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/tramites/{{proc_id}}", "host": ["{{base_url}}"], "path": ["tramites", "{{proc_id}}"] } } },
+        { "name": "Actualizar", "request": { "method": "PUT", "header": [{ "key": "x-auth-token", "value": "{{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"cost\": 150}" }, "url": { "raw": "{{base_url}}/tramites/{{proc_id}}", "host": ["{{base_url}}"], "path": ["tramites", "{{proc_id}}"] } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "header": [{ "key": "x-auth-token", "value": "{{token}}" }], "url": { "raw": "{{base_url}}/tramites/{{proc_id}}", "host": ["{{base_url}}"], "path": ["tramites", "{{proc_id}}"] } } }
+      ]
+    }
+	],
+	"variable": [
+		{ "key": "base_url", "value": "http://localhost:5000/api/v1" },
+		{ "key": "token", "value": "" },
+		{ "key": "inst_id", "value": "" },
+    { "key": "prog_id", "value": "" },
+    { "key": "proj_id", "value": "" },
+    { "key": "proc_id", "value": "" },
+    { "key": "seed_inst_id", "value": "" },
+    { "key": "seed_prog_id", "value": "" }
+	]
+}
